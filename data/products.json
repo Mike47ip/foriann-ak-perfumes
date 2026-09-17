@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1789660605645,
+    "name": "Rose",
+    "family": "floral",
+    "price": 200,
+    "badge": "new",
+    "notes": [],
+    "emoji": "🌸",
+    "image": "https://res.cloudinary.com/dn54vyyzm/image/upload/v1789660603/sillage/products/zlppilk7eheeqsd3acpg.jpg"
+  },
+  {
+    "id": 1789660935680,
+    "name": "Hayaati",
+    "family": "oriental",
+    "price": 400,
+    "badge": null,
+    "notes": [
+      "Strong scented"
+    ],
+    "emoji": "🖤",
+    "image": "https://res.cloudinary.com/dn54vyyzm/image/upload/v1789660908/sillage/products/lz2wxc52avsi6uxidsij.jpg"
+  }
+]
