@@ -35,9 +35,9 @@ export default function AdminProductsPage() {
         </div>
         <Link
           href="/admin/products/new"
-          className="bg-[#1c1b19] text-[#f7f2ea] text-xs tracking-widest px-6 py-3 no-underline hover:bg-[#b8916a] transition-colors"
+          className="bg-[#1c1b19] text-[#f7f2ea] text-xs tracking-widest px-4 py-3 no-underline hover:bg-[#b8916a] transition-colors whitespace-nowrap"
         >
-          + ADD PRODUCT
+          + ADD
         </Link>
       </div>
 
@@ -53,19 +53,11 @@ export default function AdminProductsPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white overflow-hidden">
-          <div className="grid grid-cols-[80px_1fr_120px_100px_100px_80px] gap-4 px-6 py-3 bg-[#f0ebe0] text-[#9e9890] text-xs tracking-widest border-b border-[#e8e2d9]">
-            <span>IMAGE</span>
-            <span>NAME</span>
-            <span>FAMILY</span>
-            <span>PRICE</span>
-            <span>BADGE</span>
-            <span></span>
-          </div>
-
+        <div className="flex flex-col gap-3">
           {products.map((product) => (
-            <div key={product.id} className="grid grid-cols-[80px_1fr_120px_100px_100px_80px] gap-4 px-6 py-4 border-b border-[#e8e2d9] items-center hover:bg-[#faf7f3] transition-colors">
-              <div className="w-14 h-14 bg-[#f0ebe0] flex items-center justify-center overflow-hidden">
+            <div key={product.id} className="bg-white p-4 flex items-center gap-4">
+              {/* Image */}
+              <div className="w-16 h-16 bg-[#f0ebe0] flex items-center justify-center overflow-hidden flex-shrink-0">
                 {product.image ? (
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
@@ -73,22 +65,39 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
-              <div>
-                <p className="font-playfair text-sm font-medium">{product.name}</p>
-                <p className="text-[#9e9890] text-xs mt-0.5">{product.notes.join(" · ")}</p>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-playfair text-sm font-medium truncate">{product.name}</p>
+                <p className="text-[#9e9890] text-xs truncate">{product.notes?.join(" · ")}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-[#1c1b19] capitalize">{product.family}</span>
+                  <span className="text-[#9e9890]">·</span>
+                  <span className="font-playfair text-[#b8916a] text-sm">₵{product.price.toFixed(2)}</span>
+                  {product.badge && (
+                    <>
+                      <span className="text-[#9e9890]">·</span>
+                      <span className="text-xs text-[#9e9890] capitalize">{product.badge}</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <span className="text-xs capitalize text-[#1c1b19]">{product.family}</span>
-              <span className="font-playfair text-[#b8916a]">₵{product.price.toFixed(2)}</span>
-              <span className="text-xs text-[#9e9890] capitalize">{product.badge || "—"}</span>
-
-              <button
-                onClick={() => handleDelete(product.id)}
-                disabled={deleting === product.id}
-                className="text-xs text-red-400 hover:text-red-600 bg-transparent border-none cursor-pointer disabled:opacity-40"
-              >
-                {deleting === product.id ? "..." : "Delete"}
-              </button>
+              {/* Actions */}
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <Link
+                  href={`/admin/products/${product.id}`}
+                  className="text-xs text-[#b8916a] hover:text-[#1c1b19] no-underline transition-colors text-right"
+                >
+                  Edit
+                </Link>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  disabled={deleting === product.id}
+                  className="text-xs text-red-400 hover:text-red-600 bg-transparent border-none cursor-pointer disabled:opacity-40 text-right"
+                >
+                  {deleting === product.id ? "..." : "Delete"}
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -1,21 +1,22 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Badge } from "@/lib/data";
+import { useRouter, useParams } from "next/navigation";
+import { Badge, Product } from "@/lib/data";
 
 const EMOJIS = ["🌹","🌸","🌿","🍊","🖤","✨","🌊","🌑","🌺","🌻","🌾","🍋"];
 
-export default function NewProductPage() {
+export default function EditProductPage() {
   const router = useRouter();
+  const { id } = useParams();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Categories from Supabase
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -35,16 +36,29 @@ export default function NewProductPage() {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // Load categories from Supabase on mount
+  // Load product + categories
   useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then((data) => {
-        const names = data.map((c: { name: string }) => c.name);
-        setCategories(names);
-        if (names.length > 0) set("family", names[0]);
-      });
-  }, []);
+    Promise.all([
+      fetch(`/api/products`).then((r) => r.json()),
+      fetch("/api/categories").then((r) => r.json()),
+    ]).then(([products, cats]) => {
+      const product = products.find((p: Product) => p.id === Number(id));
+      if (product) {
+        setForm({
+          name: product.name,
+          family: product.family,
+          price: String(product.price),
+          badge: product.badge || "",
+          notes: product.notes?.join(", ") || "",
+          emoji: product.emoji || "🌸",
+          image: product.image || "",
+        });
+        if (product.image) setPreview(product.image);
+      }
+      setCategories(cats.map((c: { name: string }) => c.name));
+      setLoading(false);
+    });
+  }, [id]);
 
   async function handleAddCategory() {
     const trimmed = newCategory.trim();
@@ -55,29 +69,23 @@ export default function NewProductPage() {
       setShowAddCategory(false);
       return;
     }
-
     setAddingCategory(true);
     const res = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: trimmed }),
     });
-
     if (res.ok) {
       setCategories((c) => [...c, trimmed]);
       set("family", trimmed);
       setNewCategory("");
       setShowAddCategory(false);
-    } else {
-      setError("Failed to save category.");
     }
     setAddingCategory(false);
   }
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) { setError("Please select an image file."); return; }
-    if (file.size > 10 * 1024 * 1024) { setError("File must be under 10MB."); return; }
-
     setError("");
     setUploading(true);
     setUploadProgress(20);
@@ -93,13 +101,13 @@ export default function NewProductPage() {
       setUploadProgress(60);
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       setUploadProgress(90);
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) throw new Error();
       const data = await res.json();
       set("image", data.url);
       setUploadProgress(100);
       setTimeout(() => setUploadProgress(0), 600);
     } catch {
-      setError("Upload failed. Check your Cloudinary credentials.");
+      setError("Upload failed.");
       setPreview(null);
     } finally {
       setUploading(false);
@@ -109,13 +117,11 @@ export default function NewProductPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.price) { setError("Name and price are required."); return; }
-    if (!form.family) { setError("Please select or create a category."); return; }
-
     setSaving(true);
     setError("");
 
-    const res = await fetch("/api/products", {
-      method: "POST",
+    const res = await fetch(`/api/products/${id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
@@ -128,24 +134,26 @@ export default function NewProductPage() {
     if (res.ok) {
       router.push("/admin/products");
     } else {
-      setError("Failed to save product.");
+      setError("Failed to update product.");
       setSaving(false);
     }
   }
+
+  if (loading) return <div className="text-[#9e9890] text-sm p-8">Loading...</div>;
 
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => router.back()} className="text-[#9e9890] text-sm bg-transparent border-none cursor-pointer hover:text-[#1c1b19]">←</button>
         <div>
-          <h1 className="font-playfair text-3xl text-[#1c1b19]">Add Product</h1>
-          <p className="text-[#9e9890] text-sm mt-1">Fill in details and upload a product image</p>
+          <h1 className="font-playfair text-3xl text-[#1c1b19]">Edit Product</h1>
+          <p className="text-[#9e9890] text-sm mt-1">{form.name}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-        {/* Image Upload */}
+        {/* Image */}
         <div className="bg-white p-6">
           <label className="text-[#1c1b19] text-xs tracking-widest block mb-3">
             PRODUCT IMAGE
@@ -164,7 +172,6 @@ export default function NewProductPage() {
               <div className="text-center p-8">
                 <p className="text-4xl mb-3">🖼️</p>
                 <p className="text-[#9e9890] text-sm">Drag & drop or click to upload</p>
-                <p className="text-[#9e9890] text-xs mt-1">PNG, JPG, WEBP · Max 10MB</p>
               </div>
             )}
             {uploading && (
@@ -173,9 +180,8 @@ export default function NewProductPage() {
               </div>
             )}
           </div>
-          {uploading && <p className="text-[#b8916a] text-xs mt-2">Uploading...</p>}
           {preview && !uploading && (
-            <button type="button" onClick={() => { setPreview(null); set("image", ""); if (inputRef.current) inputRef.current.value = ""; }}
+            <button type="button" onClick={() => { setPreview(null); set("image", ""); }}
               className="text-[#9e9890] text-xs mt-2 bg-transparent border-none cursor-pointer hover:text-red-400">
               Remove image
             </button>
@@ -185,9 +191,7 @@ export default function NewProductPage() {
 
         {/* Emoji */}
         <div className="bg-white p-6">
-          <label className="text-[#1c1b19] text-xs tracking-widest block mb-3">
-            EMOJI FALLBACK <span className="text-[#9e9890] normal-case font-normal tracking-normal">(shown if no image)</span>
-          </label>
+          <label className="text-[#1c1b19] text-xs tracking-widest block mb-3">EMOJI FALLBACK</label>
           <div className="flex flex-wrap gap-2">
             {EMOJIS.map((e) => (
               <button key={e} type="button" onClick={() => set("emoji", e)}
@@ -204,13 +208,13 @@ export default function NewProductPage() {
 
           <div>
             <label className="text-[#9e9890] text-xs tracking-widest block mb-1.5">NAME *</label>
-            <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Rose Éternelle"
+            <input value={form.name} onChange={(e) => set("name", e.target.value)}
               className="w-full border border-[#e8e2d9] px-4 py-2.5 text-sm outline-none focus:border-[#b8916a] transition-colors" />
           </div>
 
           <div>
             <label className="text-[#9e9890] text-xs tracking-widest block mb-1.5">PRICE (₵) *</label>
-            <input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" min="0" step="0.01"
+            <input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} min="0" step="0.01"
               className="w-full border border-[#e8e2d9] px-4 py-2.5 text-sm outline-none focus:border-[#b8916a] transition-colors" />
           </div>
 
@@ -223,44 +227,30 @@ export default function NewProductPage() {
                 + Create new
               </button>
             </div>
-
             {showAddCategory && (
               <div className="flex gap-2 mb-3">
-                <input
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
-                  placeholder="e.g. Amber, Musk, Fresh..."
-                  className="flex-1 border border-[#b8916a] px-3 py-2 text-sm outline-none"
-                  autoFocus
-                />
+                  placeholder="e.g. Amber, Musk..."
+                  className="flex-1 border border-[#b8916a] px-3 py-2 text-sm outline-none" autoFocus />
                 <button type="button" onClick={handleAddCategory} disabled={addingCategory}
-                  className="bg-[#b8916a] text-white text-xs px-4 py-2 border-none cursor-pointer hover:bg-[#d4aa88] transition-colors disabled:opacity-50">
+                  className="bg-[#b8916a] text-white text-xs px-4 py-2 border-none cursor-pointer hover:bg-[#d4aa88] disabled:opacity-50">
                   {addingCategory ? "..." : "Save"}
                 </button>
                 <button type="button" onClick={() => { setShowAddCategory(false); setNewCategory(""); }}
-                  className="bg-transparent border border-[#e8e2d9] text-[#9e9890] text-xs px-3 py-2 cursor-pointer">
-                  ✕
+                  className="bg-transparent border border-[#e8e2d9] text-[#9e9890] text-xs px-3 py-2 cursor-pointer">✕</button>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <button key={cat} type="button" onClick={() => set("family", cat)}
+                  className={`text-xs px-3 py-1.5 border transition-colors cursor-pointer ${
+                    form.family === cat ? "bg-[#1c1b19] border-[#1c1b19] text-white" : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
+                  }`}>
+                  {cat}
                 </button>
-              </div>
-            )}
-
-            {categories.length === 0 ? (
-              <p className="text-[#9e9890] text-xs py-3">No categories yet — create your first one above.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
-                  <button key={cat} type="button" onClick={() => set("family", cat)}
-                    className={`text-xs px-3 py-1.5 border transition-colors cursor-pointer ${
-                      form.family === cat
-                        ? "bg-[#1c1b19] border-[#1c1b19] text-white"
-                        : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
-                    }`}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
           </div>
 
           <div>
@@ -288,7 +278,7 @@ export default function NewProductPage() {
         <div className="flex gap-3 pb-8">
           <button type="submit" disabled={saving || uploading}
             className="bg-[#1c1b19] text-[#f7f2ea] text-xs tracking-widest px-8 py-3.5 border-none cursor-pointer hover:bg-[#b8916a] transition-colors disabled:opacity-50">
-            {saving ? "SAVING..." : "SAVE PRODUCT"}
+            {saving ? "SAVING..." : "UPDATE PRODUCT"}
           </button>
           <button type="button" onClick={() => router.back()}
             className="bg-transparent text-[#9e9890] text-xs tracking-widest px-6 py-3.5 border border-[#e8e2d9] cursor-pointer hover:border-[#1c1b19] hover:text-[#1c1b19] transition-colors">
