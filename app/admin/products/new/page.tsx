@@ -25,7 +25,7 @@ export default function NewProductPage() {
     name: "",
     family: "",
     price: "",
-    badge: "" as Badge | "",
+    badge: "" as string,
     notes: "",
     emoji: "🌸",
     image: "",
