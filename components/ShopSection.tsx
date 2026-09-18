@@ -1,18 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product, SCENT_FAMILIES, ScentFamily } from "@/lib/data";
+import { Product } from "@/lib/data";
 import ProductCard from "./ProductCard";
 
 export default function ShopSection() {
-  const [active, setActive] = useState<ScentFamily>("all");
+  const [active, setActive] = useState("all");
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
-      .then((data) => { setProducts(data); setLoading(false); });
+    Promise.all([
+      fetch("/api/products").then((r) => r.json()),
+      fetch("/api/categories").then((r) => r.json()),
+    ]).then(([prods, cats]) => {
+      setProducts(prods);
+      setCategories(cats.map((c: { name: string }) => c.name));
+      setLoading(false);
+    });
   }, []);
 
   const filtered =
@@ -30,17 +36,27 @@ export default function ShopSection() {
         </h2>
 
         <div className="flex flex-wrap gap-2">
-          {SCENT_FAMILIES.map(({ label, value }) => (
+          <button
+            onClick={() => setActive("all")}
+            className={`border text-xs tracking-[.06em] px-4 py-1.5 transition-all cursor-pointer ${
+              active === "all"
+                ? "bg-charcoal border-charcoal text-ivory"
+                : "bg-transparent border-stone text-charcoal hover:bg-charcoal hover:border-charcoal hover:text-ivory"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
             <button
-              key={value}
-              onClick={() => setActive(value)}
+              key={cat}
+              onClick={() => setActive(cat)}
               className={`border text-xs tracking-[.06em] px-4 py-1.5 transition-all cursor-pointer ${
-                active === value
+                active === cat
                   ? "bg-charcoal border-charcoal text-ivory"
                   : "bg-transparent border-stone text-charcoal hover:bg-charcoal hover:border-charcoal hover:text-ivory"
               }`}
             >
-              {label}
+              {cat}
             </button>
           ))}
         </div>
