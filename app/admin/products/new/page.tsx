@@ -265,7 +265,7 @@ export default function NewProductPage() {
 
           <div>
             <label className="text-[#9e9890] text-xs tracking-widest block mb-1.5">BADGE</label>
-            <select value={form.badge} onChange={(e) => set("badge", e.target.value)}
+            <select value={form.badge || ""} onChange={(e) => set("badge", e.target.value)}
               className="w-full border border-[#e8e2d9] px-4 py-2.5 text-sm outline-none focus:border-[#b8916a] transition-colors bg-white">
               <option value="">None</option>
               <option value="new">New</option>
