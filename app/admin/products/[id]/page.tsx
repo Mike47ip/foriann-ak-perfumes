@@ -131,9 +131,9 @@ export default function EditProductPage() {
       }),
     });
 
-    if (res.ok) {
-      router.push("/admin/products");
-    } else {
+if (res.ok) {
+  window.location.href = "/admin/products";
+} else {
       setError("Failed to update product.");
       setSaving(false);
     }

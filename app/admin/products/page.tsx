@@ -1,3 +1,5 @@
+// app/admin/products/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -72,8 +74,7 @@ export default function AdminProductsPage() {
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-[#1c1b19] capitalize">{product.family}</span>
                   <span className="text-[#9e9890]">·</span>
-                  <span className="font-playfair text-[#b8916a] text-sm">₵{product.price.toFixed(2)}</span>
-                  {product.badge && (
+                  <span className="font-playfair text-[#b8916a] text-sm">₵{Number(product.price).toFixed(2)}</span>
                     <>
                       <span className="text-[#9e9890]">·</span>
                       <span className="text-xs text-[#9e9890] capitalize">{product.badge}</span>

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import { getProducts, createProduct } from "@/lib/db";
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const data = await getProducts();
   return NextResponse.json(data);
 }
 
@@ -17,22 +12,17 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
+  const product = await createProduct({
+    id: Date.now(),
+    name: body.name,
+    family: body.family,
+    price: Number(body.price),
+    badge: body.badge || null,
+    notes: body.notes || [],
+    emoji: body.emoji || "🌸",
+    image: body.image || null,
+    gender: body.gender || "unisex",
+  });
 
-  const { data, error } = await supabase
-    .from("products")
-    .insert({
-      id: Date.now(),
-      name: body.name,
-      family: body.family,
-      price: Number(body.price),
-      badge: body.badge || null,
-      notes: body.notes || [],
-      emoji: body.emoji || "🌸",
-      image: body.image || null,
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json(product, { status: 201 });
 }

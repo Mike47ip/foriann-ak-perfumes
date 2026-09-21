@@ -1,8 +1,9 @@
+// app/admin/products/new/page.tsx
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/lib/data";
 
 const EMOJIS = ["🌹","🌸","🌿","🍊","🖤","✨","🌊","🌑","🌺","🌻","🌾","🍋"];
 
@@ -15,7 +16,6 @@ export default function NewProductPage() {
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Categories from Supabase
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -29,13 +29,13 @@ export default function NewProductPage() {
     notes: "",
     emoji: "🌸",
     image: "",
+    gender: "unisex",
   });
 
   function set(key: string, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // Load categories from Supabase on mount
   useEffect(() => {
     fetch("/api/categories")
       .then((r) => r.json())
@@ -55,14 +55,12 @@ export default function NewProductPage() {
       setShowAddCategory(false);
       return;
     }
-
     setAddingCategory(true);
     const res = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: trimmed }),
     });
-
     if (res.ok) {
       setCategories((c) => [...c, trimmed]);
       set("family", trimmed);
@@ -77,18 +75,14 @@ export default function NewProductPage() {
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) { setError("Please select an image file."); return; }
     if (file.size > 10 * 1024 * 1024) { setError("File must be under 10MB."); return; }
-
     setError("");
     setUploading(true);
     setUploadProgress(20);
-
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
-
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       setUploadProgress(60);
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -110,10 +104,8 @@ export default function NewProductPage() {
     e.preventDefault();
     if (!form.name || !form.price) { setError("Name and price are required."); return; }
     if (!form.family) { setError("Please select or create a category."); return; }
-
     setSaving(true);
     setError("");
-
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -124,7 +116,6 @@ export default function NewProductPage() {
         notes: form.notes.split(",").map((n) => n.trim()).filter(Boolean),
       }),
     });
-
     if (res.ok) {
       router.push("/admin/products");
     } else {
@@ -223,28 +214,20 @@ export default function NewProductPage() {
                 + Create new
               </button>
             </div>
-
             {showAddCategory && (
               <div className="flex gap-2 mb-3">
-                <input
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
+                <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
                   placeholder="e.g. Amber, Musk, Fresh..."
-                  className="flex-1 border border-[#b8916a] px-3 py-2 text-sm outline-none"
-                  autoFocus
-                />
+                  className="flex-1 border border-[#b8916a] px-3 py-2 text-sm outline-none" autoFocus />
                 <button type="button" onClick={handleAddCategory} disabled={addingCategory}
-                  className="bg-[#b8916a] text-white text-xs px-4 py-2 border-none cursor-pointer hover:bg-[#d4aa88] transition-colors disabled:opacity-50">
+                  className="bg-[#b8916a] text-white text-xs px-4 py-2 border-none cursor-pointer hover:bg-[#d4aa88] disabled:opacity-50">
                   {addingCategory ? "..." : "Save"}
                 </button>
                 <button type="button" onClick={() => { setShowAddCategory(false); setNewCategory(""); }}
-                  className="bg-transparent border border-[#e8e2d9] text-[#9e9890] text-xs px-3 py-2 cursor-pointer">
-                  ✕
-                </button>
+                  className="bg-transparent border border-[#e8e2d9] text-[#9e9890] text-xs px-3 py-2 cursor-pointer">✕</button>
               </div>
             )}
-
             {categories.length === 0 ? (
               <p className="text-[#9e9890] text-xs py-3">No categories yet — create your first one above.</p>
             ) : (
@@ -252,15 +235,28 @@ export default function NewProductPage() {
                 {categories.map((cat) => (
                   <button key={cat} type="button" onClick={() => set("family", cat)}
                     className={`text-xs px-3 py-1.5 border transition-colors cursor-pointer ${
-                      form.family === cat
-                        ? "bg-[#1c1b19] border-[#1c1b19] text-white"
-                        : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
+                      form.family === cat ? "bg-[#1c1b19] border-[#1c1b19] text-white" : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
                     }`}>
                     {cat}
                   </button>
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="text-[#9e9890] text-xs tracking-widest block mb-1.5">GENDER</label>
+            <div className="flex gap-2">
+              {["unisex", "men", "women"].map((g) => (
+                <button key={g} type="button" onClick={() => set("gender", g)}
+                  className={`flex-1 py-2.5 text-xs tracking-widest border transition-colors cursor-pointer capitalize ${
+                    form.gender === g ? "bg-[#1c1b19] border-[#1c1b19] text-white" : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
+                  }`}>
+                  {g}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
