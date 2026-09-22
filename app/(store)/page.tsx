@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import ScentStrip from "@/components/ScentStrip";
+import BestsellerCarousel from "@/components/BestsellerCarousel";
 import ShopSection from "@/components/ShopSection";
 import BespokeBanner from "@/components/BespokeBanner";
 import Testimonials from "@/components/Testimonials";
@@ -10,6 +11,7 @@ export default function Home() {
     <main>
       <Hero />
       <ScentStrip />
+      <BestsellerCarousel />
       <ShopSection />
       <BespokeBanner />
       <Testimonials />
