@@ -66,7 +66,7 @@ export default function ProductCard({ product }: Props) {
             {product.family.toUpperCase()}
           </span>
         </div>
-        <p className="font-playfair text-bronze text-base mb-4">₵{product.price.toFixed(2)}</p>
+        <p className="font-playfair text-bronze text-base mb-4">₵{Number(product.price).toFixed(2)}</p>
         <button
           onClick={handleAdd}
           className="w-full bg-charcoal text-ivory text-xs tracking-widest font-medium py-2.5 border-none cursor-pointer transition-colors hover:bg-bronze"
