@@ -22,13 +22,13 @@ export async function POST(req: NextRequest) {
     .sign(SECRET);
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set("sillage_admin", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 8,
-    path: "/",
-  });
+res.cookies.set("sillage_admin", token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 60 * 60 * 8,
+  path: "/",
+});
 
   return res;
 }

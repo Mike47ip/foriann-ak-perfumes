@@ -48,7 +48,10 @@ export default function AdminProductsPage() {
           <p className="text-5xl mb-4">🧴</p>
           <p className="font-playfair text-xl text-[#1c1b19] mb-2">No products yet</p>
           <p className="text-[#9e9890] text-sm mb-6">Add your first product to get started</p>
-          <Link href="/admin/products/new" className="bg-[#1c1b19] text-[#f7f2ea] text-xs tracking-widest px-6 py-3 no-underline hover:bg-[#b8916a] transition-colors">
+          <Link
+            href="/admin/products/new"
+            className="bg-[#1c1b19] text-[#f7f2ea] text-xs tracking-widest px-6 py-3 no-underline hover:bg-[#b8916a] transition-colors"
+          >
             + ADD PRODUCT
           </Link>
         </div>
@@ -69,14 +72,22 @@ export default function AdminProductsPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-playfair text-sm font-medium truncate">{product.name}</p>
                 <p className="text-[#9e9890] text-xs truncate">{product.notes?.join(" · ")}</p>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-xs text-[#1c1b19] capitalize">{product.family}</span>
                   <span className="text-[#9e9890]">·</span>
-                  <span className="font-playfair text-[#b8916a] text-sm">₵{product.price.toFixed(2)}</span>
+                  <span className="font-playfair text-[#b8916a] text-sm">
+                    ₵{Number(product.price).toFixed(2)}
+                  </span>
                   {product.badge && (
                     <>
                       <span className="text-[#9e9890]">·</span>
                       <span className="text-xs text-[#9e9890] capitalize">{product.badge}</span>
+                    </>
+                  )}
+                  {product.gender && (
+                    <>
+                      <span className="text-[#9e9890]">·</span>
+                      <span className="text-xs text-[#9e9890] capitalize">{product.gender}</span>
                     </>
                   )}
                 </div>

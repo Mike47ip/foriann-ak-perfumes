@@ -4,12 +4,13 @@ export type Badge = "new" | "best" | "ltd" | null;
 export interface Product {
   id: number;
   name: string;
-  family: Exclude<ScentFamily, "all">;
+  family: string;
   price: number;
   badge: Badge;
   notes: string[];
   emoji: string;
   image?: string;
+  gender?: string;
 }
 
 export interface CartItem extends Product {

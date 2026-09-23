@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Badge, Product } from "@/lib/data";
+import { Product } from "@/lib/data";
 
 const EMOJIS = ["🌹","🌸","🌿","🍊","🖤","✨","🌊","🌑","🌺","🌻","🌾","🍋"];
 
@@ -30,28 +30,29 @@ export default function EditProductPage() {
     notes: "",
     emoji: "🌸",
     image: "",
+    gender: "unisex",
   });
 
   function set(key: string, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // Load product + categories
   useEffect(() => {
     Promise.all([
       fetch(`/api/products`).then((r) => r.json()),
       fetch("/api/categories").then((r) => r.json()),
     ]).then(([products, cats]) => {
-      const product = products.find((p: Product) => p.id === Number(id));
+      const product = products.find((p: Product) => String(p.id) === String(id));
       if (product) {
         setForm({
-          name: product.name,
-          family: product.family,
-          price: String(product.price),
+          name: product.name || "",
+          family: product.family || "",
+          price: String(product.price || ""),
           badge: product.badge || "",
-          notes: product.notes?.join(", ") || "",
+          notes: Array.isArray(product.notes) ? product.notes.join(", ") : "",
           emoji: product.emoji || "🌸",
           image: product.image || "",
+          gender: product.gender || "unisex",
         });
         if (product.image) setPreview(product.image);
       }
@@ -89,14 +90,11 @@ export default function EditProductPage() {
     setError("");
     setUploading(true);
     setUploadProgress(20);
-
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
-
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       setUploadProgress(60);
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -119,7 +117,6 @@ export default function EditProductPage() {
     if (!form.name || !form.price) { setError("Name and price are required."); return; }
     setSaving(true);
     setError("");
-
     const res = await fetch(`/api/products/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -130,9 +127,8 @@ export default function EditProductPage() {
         notes: form.notes.split(",").map((n) => n.trim()).filter(Boolean),
       }),
     });
-
     if (res.ok) {
-      router.push("/admin/products");
+      window.location.href = "/admin/products";
     } else {
       setError("Failed to update product.");
       setSaving(false);
@@ -248,6 +244,21 @@ export default function EditProductPage() {
                     form.family === cat ? "bg-[#1c1b19] border-[#1c1b19] text-white" : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
                   }`}>
                   {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="text-[#9e9890] text-xs tracking-widest block mb-1.5">GENDER</label>
+            <div className="flex gap-2">
+              {["unisex", "men", "women"].map((g) => (
+                <button key={g} type="button" onClick={() => set("gender", g)}
+                  className={`flex-1 py-2.5 text-xs tracking-widest border transition-colors cursor-pointer capitalize ${
+                    form.gender === g ? "bg-[#1c1b19] border-[#1c1b19] text-white" : "bg-transparent border-[#e8e2d9] text-[#1c1b19] hover:border-[#b8916a]"
+                  }`}>
+                  {g}
                 </button>
               ))}
             </div>
