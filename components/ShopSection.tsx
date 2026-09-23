@@ -5,7 +5,9 @@ import { Product } from "@/lib/data";
 import ProductCard from "./ProductCard";
 
 export default function ShopSection() {
-  const [active, setActive] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeGender, setActiveGender] = useState("all");
+  const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,8 +23,16 @@ export default function ShopSection() {
     });
   }, []);
 
-  const filtered =
-    active === "all" ? products : products.filter((p) => p.family === active);
+  const filtered = products.filter((p) => {
+    const categoryMatch = activeCategory === "all" || p.family === activeCategory;
+    const genderMatch = activeGender === "all" || p.gender === activeGender;
+    const searchMatch =
+      search.trim() === "" ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.family.toLowerCase().includes(search.toLowerCase()) ||
+      (p.notes || []).some((n) => n.toLowerCase().includes(search.toLowerCase()));
+    return categoryMatch && genderMatch && searchMatch;
+  });
 
   return (
     <section id="shop" className="max-w-7xl mx-auto px-8 py-20">
@@ -35,11 +45,38 @@ export default function ShopSection() {
           Every scent, a story.
         </h2>
 
-        <div className="flex flex-wrap gap-2">
+        {/* Search */}
+        <div className="relative mb-5">
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mist"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, category or notes..."
+            className="w-full border border-stone pl-11 pr-4 py-3 text-sm outline-none focus:border-charcoal transition-colors bg-white placeholder-mist"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-mist hover:text-charcoal bg-transparent border-none cursor-pointer text-lg leading-none"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Category filters */}
+        <div className="flex flex-wrap gap-2 mb-3">
           <button
-            onClick={() => setActive("all")}
+            onClick={() => setActiveCategory("all")}
             className={`border text-xs tracking-[.06em] px-4 py-1.5 transition-all cursor-pointer ${
-              active === "all"
+              activeCategory === "all"
                 ? "bg-charcoal border-charcoal text-ivory"
                 : "bg-transparent border-stone text-charcoal hover:bg-charcoal hover:border-charcoal hover:text-ivory"
             }`}
@@ -49,14 +86,36 @@ export default function ShopSection() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActive(cat)}
+              onClick={() => setActiveCategory(cat)}
               className={`border text-xs tracking-[.06em] px-4 py-1.5 transition-all cursor-pointer ${
-                active === cat
+                activeCategory === cat
                   ? "bg-charcoal border-charcoal text-ivory"
                   : "bg-transparent border-stone text-charcoal hover:bg-charcoal hover:border-charcoal hover:text-ivory"
               }`}
             >
               {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Gender filters */}
+        <div className="flex gap-2">
+          {[
+            { label: "All", value: "all" },
+            { label: "Men", value: "men" },
+            { label: "Women", value: "women" },
+            { label: "Unisex", value: "unisex" },
+          ].map(({ label, value }) => (
+            <button
+              key={value}
+              onClick={() => setActiveGender(value)}
+              className={`border text-xs tracking-[.06em] px-4 py-1.5 transition-all cursor-pointer ${
+                activeGender === value
+                  ? "bg-bronze border-bronze text-ivory"
+                  : "bg-transparent border-stone text-charcoal hover:bg-bronze hover:border-bronze hover:text-ivory"
+              }`}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -70,16 +129,31 @@ export default function ShopSection() {
         <div className="text-center py-20">
           <p className="text-5xl mb-4">🧴</p>
           <p className="font-playfair text-2xl text-charcoal mb-2">
-            {active === "all" ? "No products yet" : `No ${active} products yet`}
+            {search ? `No results for "${search}"` : "No products found"}
           </p>
-          <p className="text-mist text-sm">Check back soon or browse another category.</p>
+          <p className="text-mist text-sm">Try a different search or filter.</p>
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="mt-4 text-bronze text-xs tracking-widest bg-transparent border-none cursor-pointer hover:underline"
+            >
+              Clear search
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          {search && (
+            <p className="text-mist text-sm mb-6">
+              {filtered.length} result{filtered.length !== 1 ? "s" : ""} for &ldquo;{search}&rdquo;
+            </p>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </>
       )}
     </section>
   );
