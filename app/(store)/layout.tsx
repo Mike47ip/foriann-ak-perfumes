@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Westside Perfumes | Luxury Fragrances in Ghana",
   description: "Shop premium luxury perfumes at Westside Perfumes. Exclusive fragrances for men, women and unisex delivered across Ghana. Based in Accra.",
   keywords: "westside perfumes, perfumes ghana, luxury fragrances ghana, buy perfume accra, perfume shop ghana, eau de parfum ghana, westsideperfumes.com",
+  verification: {
+    google: "4Mg4VWmjkNYFMd0nOBslFr6bw8L_MYhKGVbReGrDoMo",
+  },
   openGraph: {
     title: "Westside Perfumes | Luxury Fragrances in Ghana",
     description: "Shop premium luxury perfumes at Westside Perfumes. Exclusive fragrances delivered across Ghana.",
