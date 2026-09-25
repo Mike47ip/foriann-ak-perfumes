@@ -51,7 +51,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
     };
 
     try {
-      const res = await fetch("https://formspree.io/f/xjkajaaw", {
+      const res = await fetch("https://formspree.io/f/mdeklwav", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
