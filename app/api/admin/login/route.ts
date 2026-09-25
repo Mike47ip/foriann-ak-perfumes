@@ -24,11 +24,10 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({ ok: true });
 res.cookies.set("sillage_admin", token, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: true,
+  sameSite: "none",
   maxAge: 60 * 60 * 8,
   path: "/",
 });
-
   return res;
 }
