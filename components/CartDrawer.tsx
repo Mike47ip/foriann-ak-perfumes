@@ -32,7 +32,7 @@ export default function CartDrawer() {
                 <div className="w-16 h-16 bg-[#f0ebe0] flex items-center justify-center text-3xl flex-shrink-0">{item.emoji}</div>
                 <div className="flex-1">
                   <p className="font-playfair text-sm font-medium mb-0.5">{item.name}</p>
-                  <p className="text-bronze text-sm mb-2">₵{item.price.toFixed(2)}</p>
+                  <p className="text-bronze text-sm mb-2">₵{Number(item.price).toFixed(2)}</p>
                   <div className="flex items-center gap-2">
                     <button onClick={() => changeQty(item.id, -1)} className="w-7 h-7 border border-stone bg-transparent cursor-pointer text-base flex items-center justify-center hover:bg-stone transition-colors">−</button>
                     <span className="text-sm w-5 text-center">{item.qty}</span>
@@ -49,7 +49,7 @@ export default function CartDrawer() {
           <div className="px-6 py-6 border-t border-stone">
             <div className="flex justify-between mb-4">
               <span className="text-sm font-medium">Total</span>
-              <span className="font-playfair text-lg">₵{totalPrice.toFixed(2)}</span>
+              <span className="font-playfair text-lg">₵{Number(totalPrice).toFixed(2)}</span>
             </div>
             <button onClick={handleCheckout} className="w-full bg-charcoal text-ivory text-xs tracking-widest font-medium py-4 border-none cursor-pointer hover:bg-bronze transition-colors">
               CHECKOUT
