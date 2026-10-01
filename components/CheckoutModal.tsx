@@ -81,53 +81,64 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
 
     const amountInPesewas = Math.round(Number(totalPrice) * 100);
 
+    // Capture form values for use inside callback
+    const capturedForm = { ...form };
+    const capturedCart = [...cart];
+    const capturedTotal = Number(totalPrice);
+
     const handler = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-      email: form.email,
+      email: capturedForm.email,
       amount: amountInPesewas,
       currency: "GHS",
       ref: `WSP-${Date.now()}`,
       metadata: {
         custom_fields: [
-          { display_name: "Customer Name", variable_name: "customer_name", value: form.name },
-          { display_name: "Phone", variable_name: "phone", value: form.phone },
-          { display_name: "Address", variable_name: "address", value: form.address },
+          { display_name: "Customer Name", variable_name: "customer_name", value: capturedForm.name },
+          { display_name: "Phone", variable_name: "phone", value: capturedForm.phone },
+          { display_name: "Address", variable_name: "address", value: capturedForm.address },
         ],
       },
-      callback: async (response: { reference: string }) => {
-        const orderItems = cart.map((i) => ({
-          name: i.name,
-          qty: i.qty,
-          price: Number(i.price),
-          emoji: i.emoji,
-        }));
+      callback: (response: { reference: string }) => {
+        (async () => {
+          const orderItems = capturedCart.map((i) => ({
+            name: i.name,
+            qty: i.qty,
+            price: Number(i.price),
+            emoji: i.emoji,
+          }));
 
-        const orderData = {
-          customer_name: form.name,
-          customer_email: form.email,
-          customer_phone: form.phone,
-          delivery_address: form.address,
-          customer_notes: form.notes,
-          order_items: orderItems,
-          order_total: Number(totalPrice),
-        };
+          const orderData = {
+            customer_name: capturedForm.name,
+            customer_email: capturedForm.email,
+            customer_phone: capturedForm.phone,
+            delivery_address: capturedForm.address,
+            customer_notes: capturedForm.notes,
+            order_items: orderItems,
+            order_total: capturedTotal,
+          };
 
-        const verify = await fetch("/api/paystack/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference: response.reference, order_data: orderData }),
-        });
+          try {
+            const verify = await fetch("/api/paystack/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reference: response.reference, order_data: orderData }),
+            });
 
-        const result = await verify.json();
+            const result = await verify.json();
 
-        if (result.success) {
-          const orderNumber = result.order?.order_number || response.reference;
-          await sendToFormspree(response.reference, orderNumber);
-          setOrderNum(orderNumber);
-          setStatus("success");
-        } else {
-          setStatus("error");
-        }
+            if (result.success) {
+              const orderNumber = result.order?.order_number || response.reference;
+              await sendToFormspree(response.reference, orderNumber);
+              setOrderNum(orderNumber);
+              setStatus("success");
+            } else {
+              setStatus("error");
+            }
+          } catch {
+            setStatus("error");
+          }
+        })();
       },
       onClose: () => {
         setStatus("idle");
