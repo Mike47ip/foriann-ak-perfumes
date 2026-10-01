@@ -20,33 +20,33 @@ interface Order {
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   processing: "bg-yellow-100 text-yellow-700",
-  confirmed:  "bg-blue-100 text-blue-700",
+  confirmed: "bg-blue-100 text-blue-700",
   dispatched: "bg-purple-100 text-purple-700",
-  delivered:  "bg-orange-100 text-orange-700",
-  completed:  "bg-green-100 text-green-700",
+  delivered: "bg-orange-100 text-orange-700",
+  completed: "bg-green-100 text-green-700",
 };
 
 const STATUS_ICONS: Record<OrderStatus, string> = {
   processing: "📦",
-  confirmed:  "✅",
+  confirmed: "✅",
   dispatched: "🚴",
-  delivered:  "📬",
-  completed:  "✨",
+  delivered: "📬",
+  completed: "✨",
 };
 
 const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
   processing: "confirmed",
-  confirmed:  "dispatched",
+  confirmed: "dispatched",
   dispatched: "delivered",
 };
 
 const TABS: { key: "all" | OrderStatus; label: string }[] = [
-  { key: "all",        label: "All" },
+  { key: "all", label: "All" },
   { key: "processing", label: "Processing" },
-  { key: "confirmed",  label: "Confirmed" },
+  { key: "confirmed", label: "Confirmed" },
   { key: "dispatched", label: "Dispatched" },
-  { key: "delivered",  label: "Delivered" },
-  { key: "completed",  label: "Completed" },
+  { key: "delivered", label: "Delivered" },
+  { key: "completed", label: "Completed" },
 ];
 
 const PAGE_SIZE = 10;
@@ -111,16 +111,14 @@ export default function AdminOrdersPage() {
           const count = key === "all" ? orders.length : countByStatus(key as OrderStatus);
           return (
             <button key={key} onClick={() => setActiveTab(key)}
-              className={`px-4 py-2.5 text-xs tracking-widest border-b-2 transition-all cursor-pointer bg-transparent ${
-                activeTab === key
+              className={`px-4 py-2.5 text-xs tracking-widest border-b-2 transition-all cursor-pointer bg-transparent ${activeTab === key
                   ? "border-[#b8916a] text-[#1c1b19]"
                   : "border-transparent text-[#9e9890] hover:text-[#1c1b19]"
-              }`}>
+                }`}>
               {label}
               {count > 0 && (
-                <span className={`ml-2 px-1.5 py-0.5 text-[10px] rounded-full ${
-                  activeTab === key ? "bg-[#b8916a] text-white" : "bg-[#e8e2d9] text-[#9e9890]"
-                }`}>
+                <span className={`ml-2 px-1.5 py-0.5 text-[10px] rounded-full ${activeTab === key ? "bg-[#b8916a] text-white" : "bg-[#e8e2d9] text-[#9e9890]"
+                  }`}>
                   {count}
                 </span>
               )}
@@ -166,10 +164,10 @@ export default function AdminOrdersPage() {
                   <div className="text-right flex-shrink-0">
                     <p className="font-playfair text-[#b8916a] text-sm">₵{Number(order.order_total).toFixed(2)}</p>
                     <p className="text-[#9e9890] text-[10px] mt-0.5">
-{new Date(order.created_at).toLocaleString("en-GH", {
-  day: "numeric", month: "short", year: "numeric",
-  hour: "2-digit", minute: "2-digit"
-})}
+                      {new Date(order.created_at).toLocaleString("en-GH", {
+                        day: "numeric", month: "short", year: "numeric",
+                        hour: "2-digit", minute: "2-digit"
+                      })}
                     </p>
                   </div>
 
@@ -259,11 +257,10 @@ export default function AdminOrdersPage() {
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`w-8 h-8 text-xs border cursor-pointer transition-colors ${
-                      p === page
+                    className={`w-8 h-8 text-xs border cursor-pointer transition-colors ${p === page
                         ? "bg-[#1c1b19] border-[#1c1b19] text-white"
                         : "bg-transparent border-[#e8e2d9] hover:border-[#1c1b19]"
-                    }`}>
+                      }`}>
                     {p}
                   </button>
                 ))}
