@@ -3,7 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { Pool } from "pg";
 
 const isLocal = process.env.DB_ENV === "local";
-const localPool = isLocal ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+
+function getPool() {
+  return new Pool({ connectionString: process.env.DATABASE_URL });
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -11,18 +14,15 @@ export async function GET(req: NextRequest) {
   if (!productId) return NextResponse.json({ error: "product_id required" }, { status: 400 });
 
   if (isLocal) {
-    const { rows } = await localPool!.query(
+    const pool = getPool();
+    const { rows } = await pool.query(
       "SELECT ROUND(AVG(score)::numeric, 1) as average, COUNT(*) as count FROM ratings WHERE product_id = $1",
       [productId]
     );
     return NextResponse.json({ average: Number(rows[0].average) || 0, count: Number(rows[0].count) || 0 });
   }
 
-  const { data } = await supabase
-    .from("ratings")
-    .select("score")
-    .eq("product_id", productId);
-
+  const { data } = await supabase.from("ratings").select("score").eq("product_id", productId);
   const count = data?.length || 0;
   const average = count > 0 ? data!.reduce((s, r) => s + r.score, 0) / count : 0;
   return NextResponse.json({ average: Math.round(average * 10) / 10, count });
@@ -35,11 +35,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (isLocal) {
-    await localPool!.query(
-      "INSERT INTO ratings (product_id, score) VALUES ($1, $2)",
-      [product_id, score]
-    );
-    const { rows } = await localPool!.query(
+    const pool = getPool();
+    await pool.query("INSERT INTO ratings (product_id, score) VALUES ($1, $2)", [product_id, score]);
+    const { rows } = await pool.query(
       "SELECT ROUND(AVG(score)::numeric, 1) as average, COUNT(*) as count FROM ratings WHERE product_id = $1",
       [product_id]
     );

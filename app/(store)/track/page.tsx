@@ -15,11 +15,11 @@ interface Order {
 }
 
 const STEPS: { key: OrderStatus; label: string; icon: string; desc: string }[] = [
-  { key: "processing", label: "Processing",  icon: "📦", desc: "Order received, awaiting payment confirmation" },
-  { key: "confirmed",  label: "Confirmed",   icon: "✅", desc: "Payment confirmed by Westside Perfumes" },
-  { key: "dispatched", label: "Dispatched",  icon: "🚴", desc: "Your order is on its way with a rider" },
-  { key: "delivered",  label: "Delivered",   icon: "📬", desc: "Order delivered — please confirm receipt" },
-  { key: "completed",  label: "Completed",   icon: "✨", desc: "Order complete. Thank you!" },
+  { key: "processing", label: "Processing", icon: "📦", desc: "Order received, awaiting payment confirmation" },
+  { key: "confirmed", label: "Confirmed", icon: "✅", desc: "Payment confirmed by Westside Perfumes" },
+  { key: "dispatched", label: "Dispatched", icon: "🚴", desc: "Your order is on its way with a rider" },
+  { key: "delivered", label: "Delivered", icon: "📬", desc: "Order delivered — please confirm receipt" },
+  { key: "completed", label: "Completed", icon: "✨", desc: "Order complete. Thank you!" },
 ];
 
 const STATUS_ORDER: OrderStatus[] = ["processing", "confirmed", "dispatched", "delivered", "completed"];
@@ -68,6 +68,12 @@ export default function TrackPage() {
   return (
     <div className="min-h-screen bg-ivory pt-24 pb-20 px-4">
       <div className="max-w-2xl mx-auto">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 text-mist text-xs tracking-widest bg-transparent border-none cursor-pointer hover:text-charcoal mb-8 transition-colors"
+        >
+          ← BACK
+        </button>
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
             <span className="w-10 h-px bg-bronze inline-block" />
@@ -124,9 +130,8 @@ export default function TrackPage() {
                     <div key={step.key} className="flex gap-4 items-start">
                       {/* Line + dot */}
                       <div className="flex flex-col items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 transition-all ${
-                          done ? "bg-bronze" : "bg-stone"
-                        }`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 transition-all ${done ? "bg-bronze" : "bg-stone"
+                          }`}>
                           {done ? step.icon : <span className="w-2 h-2 rounded-full bg-mist inline-block" />}
                         </div>
                         {i < STEPS.length - 1 && (

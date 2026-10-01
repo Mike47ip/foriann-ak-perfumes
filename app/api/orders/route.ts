@@ -3,7 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { Pool } from "pg";
 
 const isLocal = process.env.DB_ENV === "local";
-const localPool = isLocal ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+
+function getPool() {
+  return new Pool({ connectionString: process.env.DATABASE_URL });
+}
 
 function generateOrderNumber() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -30,7 +33,8 @@ export async function POST(req: NextRequest) {
   };
 
   if (isLocal) {
-    const { rows } = await localPool!.query(
+    const pool = getPool();
+    const { rows } = await pool.query(
       `INSERT INTO orders (order_number, customer_name, customer_email, customer_phone, delivery_address, customer_notes, order_items, order_total, payment_reference, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [order.order_number, order.customer_name, order.customer_email, order.customer_phone,
