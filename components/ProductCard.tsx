@@ -10,15 +10,15 @@ interface Props {
 }
 
 const BADGE_STYLES: Record<string, string> = {
-  new:  "bg-charcoal text-ivory",
+  new: "bg-charcoal text-ivory",
   best: "bg-bronze text-ivory",
-  ltd:  "bg-sage text-ivory",
+  ltd: "bg-sage text-ivory",
 };
 
 const BADGE_LABELS: Record<string, string> = {
-  new:  "NEW",
+  new: "NEW",
   best: "BESTSELLER",
-  ltd:  "LIMITED",
+  ltd: "LIMITED",
 };
 
 export default function ProductCard({ product }: Props) {
@@ -41,9 +41,15 @@ export default function ProductCard({ product }: Props) {
   }
 
   return (
-    <div className="bg-white group transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col">
-      {/* Image area */}
-      <div className="relative bg-[#f0ebe0] flex items-center justify-center overflow-hidden" style={{ height: 300 }}>
+    <div
+      className="bg-white group transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col cursor-pointer"
+      onClick={() => window.location.href = `/products/${product.id}`}
+    >
+      {/* Image area — taller on all screens */}
+      <div
+        className="relative bg-[#f0ebe0] flex items-center justify-center overflow-hidden"
+        style={{ height: "clamp(280px, 45vw, 380px)" }}
+      >
         {product.badge && BADGE_LABELS[product.badge] && (
           <span className={`absolute top-3 left-3 z-10 text-[10px] font-semibold tracking-[.1em] px-2 py-1 ${BADGE_STYLES[product.badge]}`}>
             {BADGE_LABELS[product.badge]}
@@ -61,7 +67,10 @@ export default function ProductCard({ product }: Props) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <span className="text-8xl leading-none" style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,.08))" }}>
+          <span
+            className="text-8xl leading-none"
+            style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,.08))" }}
+          >
             {product.emoji}
           </span>
         )}
@@ -85,17 +94,18 @@ export default function ProductCard({ product }: Props) {
           </span>
         </div>
 
-        {/* Stars */}
         <div className="mb-3">
           <StarRating
             productId={product.id}
             average={average}
             count={count}
-            onRate={(newAvg) => setAverage(newAvg)}
+            onRate={(newAvg, newCount) => { setAverage(newAvg); setCount(newCount); }}
           />
         </div>
 
-        <p className="font-playfair text-bronze text-xl mb-5">₵{Number(product.price).toFixed(2)}</p>
+        <p className="font-playfair text-bronze text-xl mb-5">
+          ₵{Number(product.price).toFixed(2)}
+        </p>
         <button
           onClick={handleAdd}
           className="w-full bg-charcoal text-ivory text-xs tracking-widest font-medium py-3 border-none cursor-pointer transition-colors hover:bg-bronze mt-auto"
