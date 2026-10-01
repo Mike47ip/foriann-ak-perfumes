@@ -19,7 +19,7 @@ declare global {
 }
 
 export default function CheckoutModal({ isOpen, onClose }: Props) {
-  const { cart, totalPrice, cart: cartItems } = useCart();
+  const { cart, totalPrice } = useCart();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,8 +29,8 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
   });
   const [status, setStatus] = useState<Status>("idle");
   const [paystackLoaded, setPaystackLoaded] = useState(false);
+  const [orderNum, setOrderNum] = useState("");
 
-  // Load Paystack script
   useEffect(() => {
     if (document.getElementById("paystack-script")) {
       setPaystackLoaded(true);
@@ -47,9 +47,9 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  async function sendToFormspree(reference: string) {
+  async function sendToFormspree(reference: string, orderNumber: string) {
     const orderLines = cart
-      .map((i) => `${i.emoji} ${i.name} × ${i.qty} — ₵${(i.price * i.qty).toFixed(2)}`)
+      .map((i) => `${i.emoji} ${i.name} × ${i.qty} — ₵${(Number(i.price) * i.qty).toFixed(2)}`)
       .join("\n");
 
     await fetch("https://formspree.io/f/mdeklwav", {
@@ -61,11 +61,12 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
         customer_phone: form.phone,
         delivery_address: form.address,
         customer_notes: form.notes || "—",
+        order_number: orderNumber,
         order_items: orderLines,
-        order_total: `₵${totalPrice.toFixed(2)}`,
+        order_total: `₵${Number(totalPrice).toFixed(2)}`,
         payment_reference: reference,
         payment_status: "PAID via Paystack",
-        _subject: `✅ PAID Order from ${form.name} — ₵${totalPrice.toFixed(2)}`,
+        _subject: `✅ PAID Order ${orderNumber} from ${form.name} — ₵${Number(totalPrice).toFixed(2)}`,
         _replyto: form.email,
       }),
     });
@@ -78,8 +79,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
 
     setStatus("sending");
 
-    // Amount in pesewas (GHS * 100) — Paystack uses smallest currency unit
-    const amountInPesewas = Math.round(totalPrice * 100);
+    const amountInPesewas = Math.round(Number(totalPrice) * 100);
 
     const handler = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
@@ -95,17 +95,35 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
         ],
       },
       callback: async (response: { reference: string }) => {
-        // Verify payment on server
+        const orderItems = cart.map((i) => ({
+          name: i.name,
+          qty: i.qty,
+          price: Number(i.price),
+          emoji: i.emoji,
+        }));
+
+        const orderData = {
+          customer_name: form.name,
+          customer_email: form.email,
+          customer_phone: form.phone,
+          delivery_address: form.address,
+          customer_notes: form.notes,
+          order_items: orderItems,
+          order_total: Number(totalPrice),
+        };
+
         const verify = await fetch("/api/paystack/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference: response.reference }),
+          body: JSON.stringify({ reference: response.reference, order_data: orderData }),
         });
 
         const result = await verify.json();
 
         if (result.success) {
-          await sendToFormspree(response.reference);
+          const orderNumber = result.order?.order_number || response.reference;
+          await sendToFormspree(response.reference, orderNumber);
+          setOrderNum(orderNumber);
           setStatus("success");
         } else {
           setStatus("error");
@@ -121,6 +139,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
 
   function handleClose() {
     setStatus("idle");
+    setOrderNum("");
     setForm({ name: "", email: "", phone: "", address: "", notes: "" });
     onClose();
   }
@@ -133,6 +152,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
       <div className="fixed inset-0 z-[301] flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
+          {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-stone">
             <div>
               <h2 className="font-playfair text-xl">Complete Your Order</h2>
@@ -142,12 +162,27 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
           </div>
 
           {status === "success" ? (
-            <div className="px-6 py-16 text-center">
+            <div className="px-6 py-12 text-center">
               <p className="text-5xl mb-4">🎉</p>
               <h3 className="font-playfair text-2xl mb-2">Payment Successful!</h3>
               <p className="text-mist text-sm mb-6 max-w-xs mx-auto">
-                Thank you, {form.name}! Your payment was received and your order is confirmed. We'll be in touch at <span className="text-charcoal">{form.email}</span>.
+                Thank you, {form.name}! Your payment was received and your order is confirmed. We'll be in touch at{" "}
+                <span className="text-charcoal">{form.email}</span>.
               </p>
+
+              {orderNum && (
+                <div className="bg-[#faf7f3] border border-stone px-4 py-4 mb-6 text-left">
+                  <p className="text-mist text-xs tracking-widest mb-1">YOUR ORDER NUMBER</p>
+                  <p className="font-playfair text-2xl text-charcoal">{orderNum}</p>
+                  <p className="text-mist text-xs mt-1">Save this to track your order</p>
+                </div>
+              )}
+
+              <a href="/track"
+                className="block text-center text-bronze text-xs tracking-widest hover:underline mb-6 no-underline">
+                TRACK YOUR ORDER →
+              </a>
+
               <button onClick={handleClose}
                 className="bg-charcoal text-ivory text-xs tracking-widest px-8 py-3 border-none cursor-pointer hover:bg-bronze transition-colors">
                 CONTINUE SHOPPING
@@ -161,14 +196,19 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
                 <div className="flex flex-col gap-2">
                   {cart.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm">
-                      <span>{item.emoji} {item.name} <span className="text-mist">× {item.qty}</span></span>
-                      <span className="font-playfair text-bronze">₵{(item.price * item.qty).toFixed(2)}</span>
+                      <span>
+                        {item.emoji} {item.name}{" "}
+                        <span className="text-mist">× {item.qty}</span>
+                      </span>
+                      <span className="font-playfair text-bronze">
+                        ₵{(Number(item.price) * item.qty).toFixed(2)}
+                      </span>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-between mt-3 pt-3 border-t border-stone">
                   <span className="text-sm font-medium">Total</span>
-                  <span className="font-playfair text-lg">₵{totalPrice.toFixed(2)}</span>
+                  <span className="font-playfair text-lg">₵{Number(totalPrice).toFixed(2)}</span>
                 </div>
               </div>
 
@@ -219,7 +259,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
 
                 <button type="submit" disabled={status === "sending" || !paystackLoaded}
                   className="w-full bg-charcoal text-ivory text-xs tracking-widest py-4 border-none cursor-pointer hover:bg-bronze transition-colors disabled:opacity-50 mt-2">
-                  {status === "sending" ? "OPENING PAYMENT..." : `PAY ₵${totalPrice.toFixed(2)} NOW`}
+                  {status === "sending" ? "OPENING PAYMENT..." : `PAY ₵${Number(totalPrice).toFixed(2)} NOW`}
                 </button>
 
                 <p className="text-mist text-xs text-center">

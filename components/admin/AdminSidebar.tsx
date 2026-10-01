@@ -6,7 +6,8 @@ import { useState } from "react";
 
 const NAV = [
   { label: "Products", href: "/admin/products", icon: "🧴" },
-  { label: "Add New", href: "/admin/products/new", icon: "＋" },
+  { label: "Add New",  href: "/admin/products/new", icon: "＋" },
+  { label: "Orders",   href: "/admin/orders", icon: "📦" },
 ];
 
 export default function AdminSidebar() {
@@ -19,12 +20,18 @@ export default function AdminSidebar() {
     router.push("/admin/login");
   }
 
+  const linkClass = (href: string) =>
+    `flex items-center gap-3 px-4 py-3 text-sm transition-colors no-underline ${
+      pathname === href
+        ? "bg-[#b8916a] text-[#f7f2ea]"
+        : "text-[#9e9890] hover:text-[#f7f2ea] hover:bg-[#2e2a24]"
+    }`;
+
   return (
-    <>
+    <div>
       <button
         onClick={() => setOpen((v) => !v)}
         className="md:hidden fixed top-4 left-4 z-[400] bg-[#1c1b19] text-[#f7f2ea] border-none w-9 h-9 cursor-pointer text-lg flex items-center justify-center"
-        aria-label="Toggle menu"
       >
         {open ? "✕" : "☰"}
       </button>
@@ -37,7 +44,7 @@ export default function AdminSidebar() {
       )}
 
       <aside
-        className={`fixed left-0 top-0 bottom-0 w-64 bg-[#1c1b19] flex flex-col z-[350] transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed left-0 top-0 bottom-0 w-64 bg-[#1c1b19] flex flex-col z-[350] transition-transform duration-300 md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -47,42 +54,24 @@ export default function AdminSidebar() {
         </div>
 
         <nav className="flex-1 px-4 py-6 flex flex-col gap-1">
-          {NAV.map(({ label, href, icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors no-underline ${
-                  active
-                    ? "bg-[#b8916a] text-[#f7f2ea]"
-                    : "text-[#9e9890] hover:text-[#f7f2ea] hover:bg-[#2e2a24]"
-                }`}
-              >
-                <span>{icon}</span>
-                {label}
-              </Link>
-            );
-          })}
+          {NAV.map(({ label, href, icon }) => (
+            <Link key={href} href={href} onClick={() => setOpen(false)} className={linkClass(href)}>
+              <span>{icon}</span>
+              {label}
+            </Link>
+          ))}
         </nav>
 
         <div className="px-4 py-6 border-t border-[#2e2a24]">
-          <a
-          
-            href="/"
-            className="flex items-center gap-3 px-4 py-2 text-[#9e9890] text-sm hover:text-[#f7f2ea] transition-colors no-underline mb-1"
-          >
+          <a href="/" className="flex items-center gap-3 px-4 py-2 text-[#9e9890] text-sm hover:text-[#f7f2ea] no-underline mb-1">
             <span>🏪</span> View Store
           </a>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 text-[#9e9890] text-sm hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer w-full text-left"
-          >
+          <button onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-2 text-[#9e9890] text-sm hover:text-red-400 bg-transparent border-none cursor-pointer w-full text-left">
             <span>↩</span> Logout
           </button>
         </div>
       </aside>
-    </>
+    </div>
   );
 }
