@@ -4,16 +4,18 @@ import { supabase } from "@/lib/supabase";
 import { Pool } from "pg";
 
 const isLocal = process.env.DB_ENV === "local";
-const localPool = isLocal ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+
+function getPool() {
+  return new Pool({ connectionString: process.env.DATABASE_URL });
+}
 
 export async function GET() {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (isLocal) {
-    const { rows } = await localPool!.query(
-      "SELECT * FROM orders ORDER BY created_at DESC"
-    );
+    const pool = getPool();
+    const { rows } = await pool.query("SELECT * FROM orders ORDER BY created_at DESC");
     return NextResponse.json(rows);
   }
 
