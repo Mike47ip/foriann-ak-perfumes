@@ -92,6 +92,7 @@ export default function CheckoutModal({ isOpen, onClose }: Props) {
       amount: amountInPesewas,
       currency: "GHS",
       ref: `WSP-${Date.now()}`,
+      channels: ["mobile_money"],
       metadata: {
         custom_fields: [
           { display_name: "Customer Name", variable_name: "customer_name", value: capturedForm.name },
